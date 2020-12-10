@@ -58,26 +58,65 @@ class SVHN:
 
 
 class GaussianNoise:
-    def __init__(self, data_root, shape=(32, 32, 3), mean=0., std=1.):
+    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), mean=0., std=1.):
         self.data_root = data_root
         self.shape = shape
         self.mean = mean
         self.std = std
+        self.length = length
 
     def test(self, transform):
-        return GaussianNoiseDataset(self.shape, self.mean, self.std, transform)
+        return GaussianNoiseDataset(self.shape, self.length, self.mean, self.std, transform)
         
 
 class GaussianNoiseDataset(Dataset):
-    def __init__(self, shape, mean=0, std=1, transform=None):
+    def __init__(self, shape, length, mean=0, std=1, transform=None):
         self.mean = mean
         self.std = std
         self.shape = shape
         self.transform = transform
+        self.length
         self.dist = torch.distributions.Normal(
             torch.empty(*shape).fill_(mean),
             torch.empty(*shape).fill_(std)
         )
+    
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        img = self.dist.sample()
+        if transform is not None:
+            img = self.transform(img)
+        return img
+        
+
+class UniformNoise:
+    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), mean=0., std=1.):
+        self.data_root = data_root
+        self.shape = shape
+        self.mean = mean
+        self.std = std
+        self.length = length
+
+    def test(self, transform):
+        return GaussianNoiseDataset(self.shape, self.length, self.mean, self.std, transform)
+        
+
+class UniformNoiseDataset(Dataset):
+    def __init__(self, shape, length, low=0, high=1, transform=None):
+        self.mean = mean
+        self.std = std
+        self.shape = shape
+        self.transform = transform
+        self.length = length
+        self.dist = torch.distributions.Uniform(
+            torch.empty(*shape).fill_(low),
+            torch.empty(*shape).fill_(high)
+        )
+    
+    def __len__(self):
+        return self.length
 
     def __getitem__(self, idx):
         img = self.dist.sample()
@@ -87,4 +126,10 @@ class GaussianNoiseDataset(Dataset):
         
 
 
-DATASETS = {"cifar10": CIFAR10, "lsun": LSUN, "svhn": SVHN, "noise": GaussianNoise}
+DATASETS = {
+    "cifar10": CIFAR10,
+    "lsun": LSUN,
+    "svhn": SVHN,
+    "gaussian_noise": GaussianNoise
+    "uniform_noise": UniformNoise
+}

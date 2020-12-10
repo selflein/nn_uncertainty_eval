@@ -23,6 +23,7 @@ setuptools.setup(
         "torch>=1.6.0",
         "torchvision>=0.8.1",
         "numpy>=1.18.1",
-        "scikit-learn>=0.22.1"
+        "scikit-learn>=0.22.1",
+        "matplotlib>=3.1.3"
     ]
 )
