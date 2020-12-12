@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+from PIL import Image
 from torchvision import datasets as dset
 from torch.utils.data import random_split
 from torch.utils.data import Dataset
@@ -9,9 +11,10 @@ class CIFAR10:
         self.data_root = data_root
         self.train_size = train_size
         self.split_seed = split_seed
+        self.ds_class = dset.CIFAR10
 
     def train(self, transform):
-        train_data = dset.CIFAR10(self.data_root, train=True, transform=transform)
+        train_data = self.ds_class(self.data_root, train=True, transform=transform)
         train_size = int(len(train_data) * self.train_size)
         val_size = len(train_data) - train_size
         train_data, _ = random_split(
@@ -22,7 +25,7 @@ class CIFAR10:
         return train_data
 
     def val(self, transform):
-        train_data = dset.CIFAR10(self.data_root, train=True, transform=transform)
+        train_data = self.ds_class(self.data_root, train=True, transform=transform)
         train_size = int(len(train_data) * self.train_size)
         val_size = len(train_data) - train_size
         _, val_data = random_split(
@@ -33,8 +36,14 @@ class CIFAR10:
         return val_data
 
     def test(self, transform):
-        test_data = dset.CIFAR10(self.data_root, train=False, transform=transform)
+        test_data = self.ds_class(self.data_root, train=False, transform=transform)
         return test_data
+
+
+class CIFAR100(CIFAR10):
+    def __init__(self, data_root, train_size=0.9, split_seed=1):
+        super().__init__(data_root, train_size, split_seed)
+        self.ds_class = dset.CIFAR100
 
 
 class LSUN:
@@ -58,7 +67,7 @@ class SVHN:
 
 
 class GaussianNoise:
-    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), mean=0., std=1.):
+    def __init__(self, data_root, length=10_000, shape=(32, 32), mean=(0., 0., 0.), std=(1., 1., 1.)):
         self.data_root = data_root
         self.shape = shape
         self.mean = mean
@@ -67,18 +76,19 @@ class GaussianNoise:
 
     def test(self, transform):
         return GaussianNoiseDataset(self.shape, self.length, self.mean, self.std, transform)
-        
+
 
 class GaussianNoiseDataset(Dataset):
-    def __init__(self, shape, length, mean=0, std=1, transform=None):
-        self.mean = mean
-        self.std = std
-        self.shape = shape
+    def __init__(self, shape, length, mean=(0., 0., 0.), std=(1., 1., 1.), transform=None):
+        self.mean = torch.tensor(mean)
+        self.std = torch.tensor(std)
+        self.shape = torch.Size(shape)
         self.transform = transform
-        self.length
+        self.length = length
+
         self.dist = torch.distributions.Normal(
-            torch.empty(*shape).fill_(mean),
-            torch.empty(*shape).fill_(std)
+            self.mean.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(mean)),
+            self.std.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(mean)),
         )
     
     def __len__(self):
@@ -86,27 +96,29 @@ class GaussianNoiseDataset(Dataset):
 
     def __getitem__(self, idx):
         img = self.dist.sample()
-        if transform is not None:
+        img = Image.fromarray(img.numpy().astype(np.uint8))
+        if self.transform is not None:
             img = self.transform(img)
-        return img
-        
+        return img, -1
+
+
 
 class UniformNoise:
-    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), mean=0., std=1.):
+    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), low=0., high=1.):
         self.data_root = data_root
         self.shape = shape
-        self.mean = mean
-        self.std = std
+        self.low = low
+        self.high = high
         self.length = length
 
     def test(self, transform):
-        return GaussianNoiseDataset(self.shape, self.length, self.mean, self.std, transform)
-        
+        return GaussianNoiseDataset(self.shape, self.length, self.low, self.high, transform)
+
 
 class UniformNoiseDataset(Dataset):
     def __init__(self, shape, length, low=0, high=1, transform=None):
-        self.mean = mean
-        self.std = std
+        self.low = low
+        self.high = high
         self.shape = shape
         self.transform = transform
         self.length = length
@@ -120,16 +132,25 @@ class UniformNoiseDataset(Dataset):
 
     def __getitem__(self, idx):
         img = self.dist.sample()
-        if transform is not None:
+        img = Image.fromarray(img.numpy().astype(np.uint8))
+        if self.transform is not None:
             img = self.transform(img)
-        return img
-        
+        return img, -1
 
 
 DATASETS = {
     "cifar10": CIFAR10,
+    "cifar100": CIFAR100,
     "lsun": LSUN,
     "svhn": SVHN,
-    "gaussian_noise": GaussianNoise
+    "gaussian_noise": GaussianNoise,
     "uniform_noise": UniformNoise
 }
+
+
+def get_dataset(dataset):
+    try:
+        ds = DATASETS[dataset]
+    except KeyError as e:
+        raise ValueError(f"Dataset {dataset} not implemented.") from e
+    return ds
