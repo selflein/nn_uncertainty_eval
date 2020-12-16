@@ -67,7 +67,7 @@ class SVHN:
 
 
 class GaussianNoise:
-    def __init__(self, data_root, length=10_000, shape=(32, 32), mean=(0., 0., 0.), std=(1., 1., 1.)):
+    def __init__(self, data_root=None, length=10_000, shape=(32, 32), mean=(125.3, 123.0, 113.9), std=(63.0, 62.1, 66.7)):
         self.data_root = data_root
         self.shape = shape
         self.mean = mean
@@ -79,7 +79,10 @@ class GaussianNoise:
 
 
 class GaussianNoiseDataset(Dataset):
-    def __init__(self, shape, length, mean=(0., 0., 0.), std=(1., 1., 1.), transform=None):
+    """
+    Use CIFAR-10 mean and standard deviation as default values.
+    """
+    def __init__(self, shape, length, mean=(125.3, 123.0, 113.9), std=(63.0, 62.1, 66.7), transform=None):
         self.mean = torch.tensor(mean)
         self.std = torch.tensor(std)
         self.shape = torch.Size(shape)
@@ -88,7 +91,7 @@ class GaussianNoiseDataset(Dataset):
 
         self.dist = torch.distributions.Normal(
             self.mean.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(mean)),
-            self.std.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(mean)),
+            self.std.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(std)),
         )
     
     def __len__(self):
@@ -104,7 +107,7 @@ class GaussianNoiseDataset(Dataset):
 
 
 class UniformNoise:
-    def __init__(self, data_root, length=10_000, shape=(32, 32, 3), low=0., high=1.):
+    def __init__(self, data_root=None, length=10_000, shape=(32, 32, 3), low=0., high=255.):
         self.data_root = data_root
         self.shape = shape
         self.low = low
@@ -112,11 +115,11 @@ class UniformNoise:
         self.length = length
 
     def test(self, transform):
-        return GaussianNoiseDataset(self.shape, self.length, self.low, self.high, transform)
+        return UniformNoiseDataset(self.shape, self.length, self.low, self.high, transform)
 
 
 class UniformNoiseDataset(Dataset):
-    def __init__(self, shape, length, low=0, high=1, transform=None):
+    def __init__(self, shape, length, low=0, high=255, transform=None):
         self.low = low
         self.high = high
         self.shape = shape
