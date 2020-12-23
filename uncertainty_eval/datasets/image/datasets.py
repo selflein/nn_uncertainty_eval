@@ -1,12 +1,33 @@
+import abc
+from pathlib import Path
+
 import torch
 import numpy as np
+import pandas as pd
 from PIL import Image
 from torchvision import datasets as dset
 from torch.utils.data import random_split
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 
 
-class CIFAR10:
+class DatasetSplit(abc.ABC):
+    def __init__(self, data_root):
+        pass
+
+    @abc.abstractmethod
+    def train(self):
+        ...
+
+    @abc.abstractmethod
+    def val(self):
+        ...
+
+    @abc.abstractmethod
+    def test(self):
+        ...
+
+
+class CIFAR10(DatasetSplit):
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         self.data_root = data_root
         self.train_size = train_size
@@ -46,18 +67,30 @@ class CIFAR100(CIFAR10):
         self.ds_class = dset.CIFAR100
 
 
-class LSUN:
+class LSUN(DatasetSplit):
     def __init__(self, data_root):
         self.data_root = data_root
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        raise NotImplementedError
 
     def test(self, transform):
         test_data = dset.LSUN(str(self.data_root / "lsun"), "test", transform=transform)
         return test_data
 
 
-class SVHN:
+class SVHN(DatasetSplit):
     def __init__(self, data_root):
         self.data_root = data_root
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        raise NotImplementedError
 
     def test(self, transform):
         test_data = dset.SVHN(
@@ -66,79 +99,132 @@ class SVHN:
         return test_data
 
 
-class GaussianNoise:
-    def __init__(self, data_root=None, length=10_000, shape=(32, 32), mean=(125.3, 123.0, 113.9), std=(63.0, 62.1, 66.7)):
+class GaussianNoise(DatasetSplit):
+    def __init__(self, data_root, mean, std, length=10_000):
         self.data_root = data_root
-        self.shape = shape
         self.mean = mean
         self.std = std
         self.length = length
 
+    def train(self, transform):
+        return self.test(transform)
+
+    def val(self, transform):
+        return self.test(transform)
+
     def test(self, transform):
-        return GaussianNoiseDataset(self.shape, self.length, self.mean, self.std, transform)
+        return GaussianNoiseDataset(self.length, self.mean, self.std, transform)
 
 
 class GaussianNoiseDataset(Dataset):
     """
     Use CIFAR-10 mean and standard deviation as default values.
+    mean=(125.3, 123.0, 113.9), std=(63.0, 62.1, 66.7)
     """
-    def __init__(self, shape, length, mean=(125.3, 123.0, 113.9), std=(63.0, 62.1, 66.7), transform=None):
-        self.mean = torch.tensor(mean)
-        self.std = torch.tensor(std)
-        self.shape = torch.Size(shape)
+
+    def __init__(self, length, mean, std, transform=None):
         self.transform = transform
         self.length = length
+        self.dist = torch.distributions.Normal(mean, std)
 
-        self.dist = torch.distributions.Normal(
-            self.mean.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(mean)),
-            self.std.unsqueeze(0).repeat(self.shape.numel(), 1).reshape(*self.shape, len(std)),
-        )
-    
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
         img = self.dist.sample()
-        img = Image.fromarray(img.numpy().astype(np.uint8))
+        if len(self.mean.shape) == 3:
+            img = Image.fromarray(img.numpy().astype(np.uint8))
         if self.transform is not None:
             img = self.transform(img)
         return img, -1
 
 
-
-class UniformNoise:
-    def __init__(self, data_root=None, length=10_000, shape=(32, 32, 3), low=0., high=255.):
-        self.data_root = data_root
-        self.shape = shape
+class UniformNoise(DatasetSplit):
+    def __init__(self, data_root, low, high, length=10_000):
         self.low = low
         self.high = high
         self.length = length
 
+    def train(self, transform):
+        return self.test(transform)
+
+    def val(self, transform):
+        return self.test(transform)
+
     def test(self, transform):
-        return UniformNoiseDataset(self.shape, self.length, self.low, self.high, transform)
+        return UniformNoiseDataset(self.length, self.low, self.high, transform)
 
 
 class UniformNoiseDataset(Dataset):
-    def __init__(self, shape, length, low=0, high=255, transform=None):
+    def __init__(self, length, low, high, transform=None):
         self.low = low
         self.high = high
-        self.shape = shape
         self.transform = transform
         self.length = length
-        self.dist = torch.distributions.Uniform(
-            torch.empty(*shape).fill_(low),
-            torch.empty(*shape).fill_(high)
-        )
-    
+        self.dist = torch.distributions.Uniform(low, high)
+
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
         img = self.dist.sample()
-        img = Image.fromarray(img.numpy().astype(np.uint8))
+        if len(self.low.shape) == 3:
+            img = Image.fromarray(img.numpy().astype(np.uint8))
         if self.transform is not None:
             img = self.transform(img)
         return img, -1
+
+
+class TabularDataset(DatasetSplit):
+    def __init__(
+        self,
+        csv_path,
+        splits=[0.8, 0.1, 0.1],
+        split_seed=1,
+        label_col="2",
+        feature_cols=["0", "1"],
+    ):
+        csv = pd.read_csv(csv_path)
+        csv = csv.dropna()
+
+        features = torch.from_numpy(csv[feature_cols].to_numpy()).float()
+        label = torch.from_numpy(csv[[label_col]].to_numpy()).long().squeeze()
+        ds = TensorDataset(features, label)
+
+        self.train_data, self.val_data, self.test_data = random_split(
+            ds,
+            lengths=[int(len(ds) * split) for split in splits],
+            generator=torch.Generator().manual_seed(split_seed),
+        )
+
+    def train(self, transform):
+        return self.train_data
+
+    def val(self, transform):
+        return self.val_data
+
+    def test(self, transform):
+        return self.test_data
+
+
+class Gaussian2D(TabularDataset):
+    def __init__(self, data_root, **kwargs):
+        super().__init__(
+            Path(data_root) / "2DGaussians-0.2.csv",
+            label_col="2",
+            feature_cols=["0", "1"],
+            **kwargs,
+        )
+
+
+class AnomalousGaussian2D(TabularDataset):
+    def __init__(self, data_root, **kwargs):
+        super().__init__(
+            Path(data_root) / "anomalous-2Ddataset.csv",
+            label_col="2",
+            feature_cols=["0", "1"],
+            splits=[0.0, 0.0, 1.0] ** kwargs,
+        )
 
 
 DATASETS = {
@@ -147,7 +233,9 @@ DATASETS = {
     "lsun": LSUN,
     "svhn": SVHN,
     "gaussian_noise": GaussianNoise,
-    "uniform_noise": UniformNoise
+    "uniform_noise": UniformNoise,
+    "Gaussian2D": Gaussian2D,
+    "AnomalousGaussian2D": AnomalousGaussian2D,
 }
 
 
