@@ -18,12 +18,12 @@ setuptools.setup(
         "License :: OSI Approved :: Apache License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=[
         "torch>=1.6.0",
         "torchvision>=0.8.1",
         "numpy>=1.18.1",
         "scikit-learn>=0.22.1",
-        "matplotlib>=3.1.3"
-    ]
+        "matplotlib>=3.1.3",
+    ],
 )

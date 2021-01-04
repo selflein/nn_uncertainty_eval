@@ -1,8 +1,16 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from sklearn.metrics import precision_recall_curve, roc_curve, roc_auc_score, average_precision_score
+from sklearn.metrics import (
+    precision_recall_curve,
+    roc_curve,
+    roc_auc_score,
+    average_precision_score,
+)
 
-from uncertainty_eval.metrics.calibration_error import calc_bins, classification_calibration
+from uncertainty_eval.metrics.calibration_error import (
+    calc_bins,
+    classification_calibration,
+)
 
 
 def draw_reliability_graph(labels, probs, num_bins, ax=None):
@@ -45,10 +53,10 @@ def plot_classification_curve(measure: str, y_true, y_score, pos_label=None, ax=
         value = average_precision_score(y_true, y_score)
     else:
         raise ValueError(f"Measure {measure} not implemented.")
-    
+
     if ax is None:
         _, ax = plt.subplots()
-    
+
     ax.plot(x, y)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)

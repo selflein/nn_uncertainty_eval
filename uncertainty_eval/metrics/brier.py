@@ -51,4 +51,3 @@ def brier_decomposition(labels, probs):
     reliability = np.mean(reliability)
 
     return uncertainty, resolution, reliability
-
