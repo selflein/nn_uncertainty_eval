@@ -1,5 +1,6 @@
 from uncertainty_eval.datasets.image.datasets import *
 from uncertainty_eval.datasets.tabular import *
+from uncertainty_eval.datasets.toy import *
 
 
 DATASETS = {
@@ -11,6 +12,7 @@ DATASETS = {
     "uniform_noise": UniformNoise,
     "Gaussian2D": Gaussian2D,
     "AnomalousGaussian2D": AnomalousGaussian2D,
+    "TwoMoons": TwoMoons,
 }
 
 

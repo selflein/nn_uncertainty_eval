@@ -108,6 +108,8 @@ class GaussianNoiseDataset(Dataset):
 
     def __init__(self, length, mean, std, transform=None):
         self.transform = transform
+        self.mean = mean
+        self.std = std
         self.length = length
         self.dist = torch.distributions.Normal(mean, std)
 
