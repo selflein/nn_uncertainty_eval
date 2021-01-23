@@ -1,6 +1,7 @@
 from uncertainty_eval.datasets.image.datasets import *
 from uncertainty_eval.datasets.tabular import *
 from uncertainty_eval.datasets.toy import *
+from uncertainty_eval.datasets.other import *
 
 
 DATASETS = {
@@ -8,6 +9,7 @@ DATASETS = {
     "cifar100": CIFAR100,
     "lsun": LSUN,
     "svhn": SVHN,
+    "mnist": MNIST,
     "gaussian_noise": GaussianNoise,
     "uniform_noise": UniformNoise,
     "Gaussian2D": Gaussian2D,
