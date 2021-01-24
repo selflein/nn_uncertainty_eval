@@ -42,7 +42,7 @@ class GaussianNoiseDataset(Dataset):
     def __getitem__(self, idx):
         img = self.dist.sample()
         if len(self.mean.shape) == 3:
-            img = Image.fromarray(img.numpy().astype(np.uint8))
+            img = Image.fromarray(img.numpy().squeeze().astype(np.uint8))
         if self.transform is not None:
             img = self.transform(img)
         return img, -1
@@ -78,7 +78,7 @@ class UniformNoiseDataset(Dataset):
     def __getitem__(self, idx):
         img = self.dist.sample()
         if len(self.low.shape) == 3:
-            img = Image.fromarray(img.numpy().astype(np.uint8))
+            img = Image.fromarray(img.numpy().squeeze().astype(np.uint8))
         if self.transform is not None:
             img = self.transform(img)
         return img, -1

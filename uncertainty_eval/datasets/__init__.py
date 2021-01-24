@@ -10,6 +10,8 @@ DATASETS = {
     "lsun": LSUN,
     "svhn": SVHN,
     "mnist": MNIST,
+    "kmnist": KMNIST,
+    "fashionmnist": FashionMNIST,
     "gaussian_noise": GaussianNoise,
     "uniform_noise": UniformNoise,
     "Gaussian2D": Gaussian2D,
