@@ -17,6 +17,14 @@ DATASETS = {
     "Gaussian2D": Gaussian2D,
     "AnomalousGaussian2D": AnomalousGaussian2D,
     "TwoMoons": TwoMoons,
+    "SwissRoll": SwissRoll,
+    "Circles": Circles,
+    "Rings": Rings,
+    "PinWheel": PinWheel,
+    "TwoSpirals": TwoSpirals,
+    "Checkerboard": Checkerboard,
+    "Line": Line,
+    "Cosine": Cosine,
 }
 
 
