@@ -18,7 +18,7 @@ def csv_to_dataset(csv_path: Path, feature_cols, label_col):
     return features, label
 
 
-def data_split(features, labels, splits=(0.8, 0.1, 0.1)):
+def data_split(features, labels, splits=(0.8, 0.1, 0.1), seed=1):
     assert sum(splits) <= 1, f"Sum of splits {splits} needs to be <= 1."
     assert len(features) == len(
         labels

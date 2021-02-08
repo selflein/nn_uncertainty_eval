@@ -146,7 +146,10 @@ class Checkerboard(ToyDatasetSplit):
         x2_ = np.random.rand(num_samples) - np.random.randint(0, 2, num_samples) * 2
         x2 = x2_ + (np.floor(x1) % 2)
         data = np.concatenate([x1[:, None], x2[:, None]], 1) * 2
-        return torch.from_numpy(data), torch.empty(data.shape[0]).fill_(-1).long()
+        return (
+            torch.from_numpy(data).float(),
+            torch.empty(data.shape[0]).fill_(0).long(),
+        )
 
 
 class Line(ToyDatasetSplit):

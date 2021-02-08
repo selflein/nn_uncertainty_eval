@@ -64,3 +64,16 @@ def plot_classification_curve(measure: str, y_true, y_score, pos_label=None, ax=
     ax.set_ylabel(y_label)
     ax.set_title(f"AU{measure.upper()}: {value * 100:.02f}")
     return ax
+
+
+def plot_score_hist(real_scores, fake_scores, title=None, ax=None):
+    if ax is None:
+        _, ax = plt.subplots()
+
+    if title is not None:
+        ax.set_title(title)
+
+    ax.hist(real_scores, bins=100, alpha=0.5, density=True, stacked=True)
+    ax.hist(fake_scores, bins=100, alpha=0.5, density=True, stacked=True)
+    ax.legend(labels=("Real", "Fake"))
+    return ax
