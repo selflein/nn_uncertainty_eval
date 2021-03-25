@@ -75,6 +75,12 @@ class KMNIST(CIFAR10):
         self.ds_class = dset.KMNIST
 
 
+class CelebA(CIFAR10):
+    def __init__(self, data_root, train_size=0.9, split_seed=1):
+        super().__init__(data_root, train_size, split_seed)
+        self.ds_class = dset.CelebA(root)
+
+
 class LSUN(DatasetSplit):
     def __init__(self, data_root):
         self.data_root = data_root

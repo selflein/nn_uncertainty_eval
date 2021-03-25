@@ -44,7 +44,7 @@ class TwoMoons(ToyDatasetSplit):
 class SwissRoll(ToyDatasetSplit):
     @staticmethod
     def _create_data(num_samples):
-        data = sk_datasets.make_swiss_roll(n_samples=num_samples, noise=1.0)[0]
+        data = sk_datasets.make_swiss_roll(n_samples=num_samples, noise=0.1)[0]
         data = data.astype("float32")
         data /= 5
         return torch.from_numpy(data), torch.empty(data.shape[0]).fill_(-1).long()
