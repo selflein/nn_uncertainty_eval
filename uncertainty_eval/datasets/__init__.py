@@ -25,6 +25,7 @@ DATASETS = {
     "Checkerboard": Checkerboard,
     "Line": Line,
     "Cosine": Cosine,
+    "celeb-a": CelebA,
 }
 
 
