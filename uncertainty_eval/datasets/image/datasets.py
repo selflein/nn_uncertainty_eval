@@ -1,12 +1,8 @@
 from pathlib import Path
 
 import torch
-import numpy as np
-import pandas as pd
-from PIL import Image
 from torchvision import datasets as dset
 from torch.utils.data import random_split
-from torch.utils.data import Dataset, TensorDataset
 
 from uncertainty_eval.datasets.abstract_datasplit import DatasetSplit
 
@@ -75,10 +71,21 @@ class KMNIST(CIFAR10):
         self.ds_class = dset.KMNIST
 
 
-class CelebA(CIFAR10):
-    def __init__(self, data_root, train_size=0.9, split_seed=1):
-        super().__init__(data_root, train_size, split_seed)
-        self.ds_class = dset.CelebA(root)
+class CelebA(DatasetSplit):
+    def __init__(self, data_root):
+        self.data_root = data_root
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        raise NotImplementedError
+
+    def test(self, transform):
+        test_data = dset.CelebA(
+            str(self.data_root), "test", transform=transform, download=True
+        )
+        return test_data
 
 
 class LSUN(DatasetSplit):
