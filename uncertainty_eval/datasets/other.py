@@ -88,7 +88,7 @@ class UniformNoiseDataset(Dataset):
         return img, -1
 
 
-class OODGenomicsDataset(torch.utils.data.IterableDataset):
+class OODGenomics(torch.utils.data.IterableDataset):
     """PyTorch Dataset implementation for the Bacteria Genomics OOD dataset (https://github.com/google-research/google-research/tree/master/genomics_ood) proposed in
 
     J. Ren et al., “Likelihood Ratios for Out-of-Distribution Detection,” arXiv:1906.02845 [cs, stat], Available: http://arxiv.org/abs/1906.02845.
@@ -104,7 +104,8 @@ class OODGenomicsDataset(torch.utils.data.IterableDataset):
 
     def __init__(self, data_root, split="train", transform=None, target_transform=None):
         if isinstance(data_root, str):
-            self.data_root = Path(data_root)
+            data_root = Path(data_root)
+        self.data_root = data_root / "llr_ood_genomics"
 
         assert split in self.splits, f"Split '{split}' does not exist."
         split_dir = self.data_root / self.splits[split]
@@ -126,15 +127,48 @@ class OODGenomicsDataset(torch.utils.data.IterableDataset):
         target_transform = (
             target_transform if target_transform is not None else lambda x: x
         )
-        self.full_transform = lambda x: self.full_transform(
+        self.data_transform = lambda x: self.full_transform(
             x, transform, target_transform
         )
 
     @staticmethod
     def full_transform(item, transform, target_transform):
-        x = torch.from_numpy(transform(item["x"].copy()))
-        y = torch.from_numpy(target_transform(item["y"].copy()))
+        dec = np.array([int(i) for i in item["x"].tobytes().decode("utf-8").split(" ")])
+        x = torch.from_numpy(transform(dec.copy())).float()
+        y = torch.from_numpy(target_transform(item["y"].copy())).long().squeeze()
         return x, y
 
     def __iter__(self):
-        return map(self.full_transform, self.ds.__iter__())
+        return map(self.data_transform, self.ds.__iter__())
+
+
+class GenomicsDataset(DatasetSplit):
+    data_shape = (250,)
+
+    def __init__(self, data_root):
+        self.data_root = data_root
+
+    def train(self, transform):
+        return OODGenomics(self.data_root, split="train", transform=transform)
+
+    def val(self, transform):
+        return OODGenomics(self.data_root, split="val", transform=transform)
+
+    def test(self, transform):
+        return OODGenomics(self.data_root, split="test", transform=transform)
+
+
+class OODGenomicsDataset(DatasetSplit):
+    data_shape = (250,)
+
+    def __init__(self, data_root):
+        self.data_root = data_root
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        return OODGenomics(self.data_root, split="val_ood", transform=transform)
+
+    def test(self, transform):
+        return OODGenomics(self.data_root, split="test_ood", transform=transform)

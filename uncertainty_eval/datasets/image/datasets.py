@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from torch.utils.data.dataset import ConcatDataset
 from torchvision import datasets as dset
 from torch.utils.data import random_split
 
@@ -8,6 +9,9 @@ from uncertainty_eval.datasets.abstract_datasplit import DatasetSplit
 
 
 class CIFAR10(DatasetSplit):
+
+    data_shape = (32, 32, 3)
+
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         self.data_root = data_root
         self.train_size = train_size
@@ -54,18 +58,24 @@ class CIFAR100(CIFAR10):
 
 
 class MNIST(CIFAR10):
+    data_shape = (28, 28, 1)
+
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         super().__init__(data_root, train_size, split_seed)
         self.ds_class = dset.MNIST
 
 
 class FashionMNIST(CIFAR10):
+    data_shape = (28, 28, 1)
+
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         super().__init__(data_root, train_size, split_seed)
         self.ds_class = dset.FashionMNIST
 
 
 class KMNIST(CIFAR10):
+    data_shape = (28, 28, 1)
+
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         super().__init__(data_root, train_size, split_seed)
         self.ds_class = dset.KMNIST
@@ -118,3 +128,23 @@ class SVHN(DatasetSplit):
             str(self.data_root / "svhn"), "test", transform=transform, download=True
         )
         return test_data
+
+
+class Textures(DatasetSplit):
+    def __init__(self, data_root):
+        self.data_root = data_root
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        raise NotImplementedError
+
+    def test(self, transform):
+        test_data = dset.ImageFolder(
+            str(self.data_root / "textures" / "train"), transform=transform
+        )
+        valid_data = dset.ImageFolder(
+            str(self.data_root / "textures" / "valid"), transform=transform
+        )
+        return ConcatDataset([test_data, valid_data])

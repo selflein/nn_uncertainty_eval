@@ -26,6 +26,9 @@ DATASETS = {
     "Line": Line,
     "Cosine": Cosine,
     "celeb-a": CelebA,
+    "textures": Textures,
+    "genomics": GenomicsDataset,
+    "genomics-ood": OODGenomicsDataset,
 }
 
 
