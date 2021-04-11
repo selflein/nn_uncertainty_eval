@@ -4,9 +4,10 @@ from pathlib import Path
 import torch
 import numpy as np
 from PIL import Image
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 from tfrecord.torch.dataset import MultiTFRecordDataset
 
+from uncertainty_eval.datasets.tabular import TabularDataset
 from uncertainty_eval.datasets.abstract_datasplit import DatasetSplit
 
 
@@ -172,3 +173,26 @@ class OODGenomicsDataset(DatasetSplit):
 
     def test(self, transform):
         return OODGenomics(self.data_root, split="test_ood", transform=transform)
+
+
+class ImageEmbeddingDataset(DatasetSplit):
+    data_shape = (640,)
+
+    def __init__(self, data_root, dataset_name):
+        self.data_root = data_root
+        self.dataset_name = dataset_name
+
+    def load_split(self, split):
+        data = np.load(
+            self.data_root / "embeddings" / f"{self.dataset_name}_{split}.npz"
+        )
+        return torch.from_numpy(data["x"]), torch.from_numpy(data["y"])
+
+    def train(self, transform):
+        return TabularDataset(*self.load_split("train"), transforms=transform)
+
+    def val(self, transform):
+        return TabularDataset(*self.load_split("val"), transforms=transform)
+
+    def test(self, transform):
+        return TabularDataset(*self.load_split("test"), transforms=transform)

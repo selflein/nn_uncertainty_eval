@@ -2,6 +2,7 @@ from uncertainty_eval.datasets.image.datasets import *
 from uncertainty_eval.datasets.tabular import *
 from uncertainty_eval.datasets.toy import *
 from uncertainty_eval.datasets.other import *
+from uncertainty_eval.utils import partialclass
 
 
 DATASETS = {
@@ -29,6 +30,10 @@ DATASETS = {
     "textures": Textures,
     "genomics": GenomicsDataset,
     "genomics-ood": OODGenomicsDataset,
+    "sensorless": SensorlessDrive,
+    "sensorless-ood": SensorlessDriveOOD,
+    "segment": Segment,
+    "segment-ood": SegmentOOD,
 }
 
 
@@ -36,5 +41,8 @@ def get_dataset(dataset):
     try:
         ds = DATASETS[dataset]
     except KeyError as e:
-        raise ValueError(f"Dataset {dataset} not implemented.") from e
+        if "embedded" in dataset:
+            ds = partialclass(ImageEmbeddingDataset, dataset_name=dataset)
+        else:
+            raise ValueError(f"Dataset {dataset} not implemented.") from e
     return ds

@@ -1,3 +1,4 @@
+import abc
 from pathlib import Path
 
 import torch
@@ -47,18 +48,11 @@ class TabularDataset(Dataset):
         return features, self.labels[idx]
 
 
-class Gaussian2D(DatasetSplit):
-    def __init__(self, data_root, splits=[0.8, 0.1, 0.1], split_seed=1, **kwargs):
-        super().__init__(data_root)
-        features, labels = csv_to_dataset(
-            Path(data_root) / "2DGaussians-0.2.csv", ["0", "1"], "2"
-        )
-
-        (
-            (self.train_feats, self.train_labels),
-            (self.val_feats, self.val_labels),
-            (self.test_feats, self.test_labels),
-        ) = data_split(features, labels, splits=splits)
+class TabularDatasetSplit(DatasetSplit):
+    def __init__(self, train, val, test):
+        self.train_feats, self.train_labels = train
+        self.val_feats, self.val_labels = val
+        self.test_feats, self.test_labels = test
 
     def train(self, transform):
         return TabularDataset(self.train_feats, self.train_labels, transform)
@@ -70,22 +64,69 @@ class Gaussian2D(DatasetSplit):
         return TabularDataset(self.test_feats, self.test_labels, transform)
 
 
-class AnomalousGaussian2D(DatasetSplit):
-    """
-    Does not have train, test, val split. Returns same dataset.
-    """
+class Gaussian2D(TabularDatasetSplit):
+    data_shape = (2,)
+
+    def __init__(self, data_root, splits=[0.8, 0.1, 0.1], split_seed=1, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "2DGaussians-0.2.csv", ["0", "1"], "2"
+        )
+        super().__init__(*data_split(features, labels, splits=splits))
+
+
+class AnomalousGaussian2D(TabularDatasetSplit):
+    data_shape = (2,)
 
     def __init__(self, data_root, **kwargs):
-        super().__init__(data_root)
-        self.features, self.labels = csv_to_dataset(
+        features, labels = csv_to_dataset(
             Path(data_root) / "anomalous-2Ddataset.csv", ["0", "1"], "2"
         )
+        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
 
-    def train(self, transform):
-        return TabularDataset(self.features, self.labels, transform)
 
-    def val(self, transform):
-        return TabularDataset(self.features, self.labels, transform)
+class SensorlessDrive(TabularDatasetSplit):
+    data_shape = (48,)
 
-    def test(self, transform):
-        return TabularDataset(self.features, self.labels, transform)
+    def __init__(self, data_root, splits=[0.8, 0.1, 0.1], split_seed=1, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "sensorless_drive_scale_10_11_missing.csv",
+            [str(i) for i in range(48)],
+            "48",
+        )
+        super().__init__(*data_split(features, labels, splits=splits))
+
+
+class SensorlessDriveOOD(TabularDatasetSplit):
+    data_shape = (48,)
+
+    def __init__(self, data_root, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "sensorless_drive_scale_10_11_only.csv",
+            [str(i) for i in range(48)],
+            "48",
+        )
+        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
+
+
+class Segment(TabularDatasetSplit):
+    data_shape = (18,)
+
+    def __init__(self, data_root, splits=[0.8, 0.1, 0.1], split_seed=1, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "segment_scale_sky_missing.csv",
+            [str(i) for i in range(18)],
+            "18",
+        )
+        super().__init__(*data_split(features, labels, splits=splits))
+
+
+class SegmentOOD(TabularDatasetSplit):
+    data_shape = (18,)
+
+    def __init__(self, data_root, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "segment_scale_sky_only.csv",
+            [str(i) for i in range(18)],
+            "18",
+        )
+        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
