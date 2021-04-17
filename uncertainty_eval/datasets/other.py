@@ -196,3 +196,7 @@ class ImageEmbeddingDataset(DatasetSplit):
 
     def test(self, transform):
         return TabularDataset(*self.load_split("test"), transforms=transform)
+
+
+class GenomicsEmbeddingsDataset(ImageEmbeddingDataset):
+    data_shape = (128,)

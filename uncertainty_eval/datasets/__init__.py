@@ -43,7 +43,10 @@ def get_dataset(dataset):
         ds = DATASETS[dataset]
     except KeyError as e:
         if "embedded" in dataset:
-            ds = partialclass(ImageEmbeddingDataset, dataset_name=dataset)
+            if "genomics" in dataset:
+                ds = partialclass(GenomicsEmbeddingsDataset, dataset_name=dataset)
+            else:
+                ds = partialclass(ImageEmbeddingDataset, dataset_name=dataset)
         else:
             raise ValueError(f"Dataset {dataset} not implemented.") from e
     return ds
