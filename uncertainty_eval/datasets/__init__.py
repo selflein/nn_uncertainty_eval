@@ -34,6 +34,7 @@ DATASETS = {
     "sensorless-ood": SensorlessDriveOOD,
     "segment": Segment,
     "segment-ood": SegmentOOD,
+    "notmnist": NotMNISTSplit,
 }
 
 

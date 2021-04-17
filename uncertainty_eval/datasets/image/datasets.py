@@ -148,3 +148,35 @@ class Textures(DatasetSplit):
             str(self.data_root / "textures" / "valid"), transform=transform
         )
         return ConcatDataset([test_data, valid_data])
+
+
+class NotMNIST(dset.MNIST):
+
+    resources = [
+        (
+            "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/master/t10k-images-idx3-ubyte.gz",
+            "2c87c839a4ef9b238846600eec8c35b7",
+        ),
+        (
+            "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/master/t10k-labels-idx1-ubyte.gz",
+            "7ea9118cbafd0f6e3ee2ad771d782a01",
+        ),
+        (
+            "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/master/train-images-idx3-ubyte.gz",
+            "d916d7283fce4d08db9867c640ec0042",
+        ),
+        (
+            "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/master/train-labels-idx1-ubyte.gz",
+            "eab59f88903339e01dac19deed3824c0",
+        ),
+    ]
+
+    classes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+
+
+class NotMNISTSplit(CIFAR10):
+    data_shape = (28, 28, 1)
+
+    def __init__(self, data_root, train_size=0.9, split_seed=1):
+        super().__init__(data_root, train_size, split_seed)
+        self.ds_class = NotMNIST
