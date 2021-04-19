@@ -1,11 +1,9 @@
-import abc
 from pathlib import Path
 
 import torch
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from torch.utils.data import TensorDataset, Dataset
+from torch.utils.data import Dataset
 
 from uncertainty_eval.datasets.abstract_datasplit import DatasetSplit
 
@@ -24,7 +22,8 @@ def data_split(features, labels, splits=(0.8, 0.1, 0.1), seed=1):
     assert len(features) == len(
         labels
     ), "First dimension of features and labels has to match."
-    idxs = np.random.permutation(len(features))
+    rng = np.random.default_rng(seed)
+    idxs = rng.permutation(len(features))
 
     lengths = np.array([int(s * len(features)) for s in splits])
     split_idxs = np.split(idxs, np.cumsum(lengths))[:-1]
@@ -71,7 +70,7 @@ class Gaussian2D(TabularDatasetSplit):
         features, labels = csv_to_dataset(
             Path(data_root) / "2DGaussians-0.2.csv", ["0", "1"], "2"
         )
-        super().__init__(*data_split(features, labels, splits=splits))
+        super().__init__(*data_split(features, labels, splits=splits, seed=split_seed))
 
 
 class AnomalousGaussian2D(TabularDatasetSplit):
@@ -81,7 +80,9 @@ class AnomalousGaussian2D(TabularDatasetSplit):
         features, labels = csv_to_dataset(
             Path(data_root) / "anomalous-2Ddataset.csv", ["0", "1"], "2"
         )
-        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
+        super().__init__(
+            *data_split(features, labels, splits=[0.0, 0.0, 1.0], **kwargs)
+        )
 
 
 class SensorlessDrive(TabularDatasetSplit):
@@ -93,19 +94,21 @@ class SensorlessDrive(TabularDatasetSplit):
             [str(i) for i in range(48)],
             "48",
         )
-        super().__init__(*data_split(features, labels, splits=splits))
+        super().__init__(*data_split(features, labels, splits=splits, seed=split_seed))
 
 
 class SensorlessDriveOOD(TabularDatasetSplit):
     data_shape = (48,)
 
-    def __init__(self, data_root, **kwargs):
+    def __init__(self, data_root, split_seed=1, **kwargs):
         features, labels = csv_to_dataset(
             Path(data_root) / "sensorless_drive_scale_10_11_only.csv",
             [str(i) for i in range(48)],
             "48",
         )
-        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
+        super().__init__(
+            *data_split(features, labels, splits=[0.0, 0.0, 1.0], seed=split_seed)
+        )
 
 
 class Segment(TabularDatasetSplit):
@@ -117,7 +120,7 @@ class Segment(TabularDatasetSplit):
             [str(i) for i in range(18)],
             "18",
         )
-        super().__init__(*data_split(features, labels, splits=splits))
+        super().__init__(*data_split(features, labels, splits=splits, seed=split_seed))
 
 
 class SegmentOOD(TabularDatasetSplit):
