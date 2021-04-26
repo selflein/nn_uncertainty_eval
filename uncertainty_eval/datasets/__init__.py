@@ -35,6 +35,7 @@ DATASETS = {
     "segment": Segment,
     "segment-ood": SegmentOOD,
     "notmnist": NotMNISTSplit,
+    "constant": Constant,
 }
 
 

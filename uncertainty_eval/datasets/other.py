@@ -53,6 +53,49 @@ class GaussianNoiseDataset(Dataset):
         return img, -1
 
 
+class Constant(DatasetSplit):
+    def __init__(self, data_root, low, high, shape, length=10_000):
+        self.low = low
+        self.high = high
+        self.length = length
+        self.shape = shape
+
+    def train(self, transform):
+        return self.test(transform)
+
+    def val(self, transform):
+        return self.test(transform)
+
+    def test(self, transform):
+        return ConstantDataset(self.length, self.low, self.high, self.shape, transform)
+
+
+class ConstantDataset(Dataset):
+    def __init__(self, length, low, high, shape, transform=None):
+        assert isinstance(low, float) and isinstance(high, float)
+
+        self.low = low
+        self.high = high
+        self.transform = transform
+        self.length = length
+        self.shape = shape
+        self.dist = torch.distributions.Uniform(low, high)
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        sample = self.dist.sample().item()
+        sample = torch.empty(self.shape).fill_(sample)
+
+        if len(self.shape) == 3:
+            sample = Image.fromarray(sample.numpy().squeeze().astype(np.uint8))
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+        return sample, -1
+
+
 class UniformNoise(DatasetSplit):
     def __init__(self, data_root, low, high, length=10_000):
         self.low = low
