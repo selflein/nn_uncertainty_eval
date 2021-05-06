@@ -36,6 +36,7 @@ DATASETS = {
     "segment-ood": SegmentOOD,
     "notmnist": NotMNISTSplit,
     "constant": Constant,
+    "genomics-noise": GenomicsNoise,
 }
 
 

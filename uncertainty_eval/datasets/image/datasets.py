@@ -86,10 +86,16 @@ class CelebA(DatasetSplit):
         self.data_root = data_root
 
     def train(self, transform):
-        raise NotImplementedError
+        test_data = dset.CelebA(
+            str(self.data_root), "train", transform=transform, download=True
+        )
+        return test_data
 
     def val(self, transform):
-        raise NotImplementedError
+        test_data = dset.CelebA(
+            str(self.data_root), "val", transform=transform, download=True
+        )
+        return test_data
 
     def test(self, transform):
         test_data = dset.CelebA(
@@ -103,10 +109,14 @@ class LSUN(DatasetSplit):
         self.data_root = data_root
 
     def train(self, transform):
-        raise NotImplementedError
+        test_data = dset.LSUN(
+            str(self.data_root / "lsun"), "train", transform=transform
+        )
+        return test_data
 
     def val(self, transform):
-        raise NotImplementedError
+        test_data = dset.LSUN(str(self.data_root / "lsun"), "val", transform=transform)
+        return test_data
 
     def test(self, transform):
         test_data = dset.LSUN(str(self.data_root / "lsun"), "test", transform=transform)

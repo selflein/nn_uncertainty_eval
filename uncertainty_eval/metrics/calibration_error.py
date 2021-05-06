@@ -25,6 +25,6 @@ def classification_calibration(labels, probs, num_bins=10):
 
     cal_errors = np.abs(bin_accs - bin_confs)
     mce = np.max(cal_errors)
-    ece = np.sum(cal_errors * (bin_sizes / np.sum(bin_sizes)))
+    ece = np.sum(cal_errors * (bin_sizes / (np.sum(bin_sizes) + 1e-7)))
 
     return ece, mce

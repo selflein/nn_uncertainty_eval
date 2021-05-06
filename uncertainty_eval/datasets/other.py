@@ -241,5 +241,24 @@ class ImageEmbeddingDataset(DatasetSplit):
         return TabularDataset(*self.load_split("test"), transforms=transform)
 
 
+class GenomicsNoise(DatasetSplit):
+    data_shape = (250,)
+
+    def __init__(self, data_root):
+        self.data_root = data_root
+        data = np.load(self.data_root / "genomics_noise.npz")
+        self.x = torch.from_numpy(data["x"])
+        self.y = torch.from_numpy(data["y"])
+
+    def train(self, transform):
+        raise NotImplementedError
+
+    def val(self, transform):
+        raise NotImplementedError
+
+    def test(self, transform):
+        return TensorDataset(self.x, self.y)
+
+
 class GenomicsEmbeddingsDataset(ImageEmbeddingDataset):
     data_shape = (128,)
