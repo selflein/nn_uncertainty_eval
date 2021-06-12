@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch.utils.data.dataset import ConcatDataset
 from torchvision import datasets as dset
-from torch.utils.data import random_split
+from torch.utils.data import random_split, Dataset
 
 from uncertainty_eval.datasets.abstract_datasplit import DatasetSplit
 
@@ -93,7 +94,7 @@ class CelebA(DatasetSplit):
 
     def val(self, transform):
         test_data = dset.CelebA(
-            str(self.data_root), "val", transform=transform, download=True
+            str(self.data_root), "valid", transform=transform, download=True
         )
         return test_data
 
@@ -190,3 +191,65 @@ class NotMNISTSplit(CIFAR10):
     def __init__(self, data_root, train_size=0.9, split_seed=1):
         super().__init__(data_root, train_size, split_seed)
         self.ds_class = NotMNIST
+
+
+class CIFAR10CDataset(Dataset):
+    TEST_SIZE = 10_000
+
+    def __init__(self, data_root, severity=1, corruption="all", transform=None):
+        assert severity in range(1, 6)
+
+        self.data_root = data_root / "CIFAR-10-C"
+        self.data = []
+        self.severity = severity
+        self.transform = None
+
+        if corruption == "all":
+            for corr_file in self.data_root.iterdir():
+                if corr_file.stem != "labels":
+                    self.data.append(self._extract_severity_data(corr_file))
+        else:
+            self.data.append(
+                self._extract_severity_data(self.data_root / (corruption + ".npy"))
+            )
+
+        self.labels = self._extract_severity_data(self.data_root / "labels.npy")
+
+    def _extract_severity_data(self, path: Path):
+        arr = np.load(path)
+        lower_idx = (self.severity - 1) * self.TEST_SIZE
+        upper_idx = self.severity * self.TEST_SIZE
+        return arr[lower_idx:upper_idx]
+
+    def __len__(self):
+        return sum(len(d) for d in self.data)
+
+    def __getitem__(self, idx):
+        data_idx = idx // self.TEST_SIZE
+        subset_idx = idx % self.TEST_SIZE
+
+        img = torch.from_numpy(self.data[data_idx][subset_idx])
+        if self.transform is not None:
+            img = self.transform(img)
+
+        return img, torch.from_numpy(self.labels[subset_idx])
+
+
+class CIFAR10C(DatasetSplit):
+    data_shape = (32, 32, 3)
+
+    def __init__(self, data_root, severity=1, corruption="all"):
+        self.data_root = data_root
+        self.corruption = corruption
+        self.severity = severity
+
+    def train(self, transform):
+        raise NotImplementedError()
+
+    def val(self, transform):
+        raise NotImplementedError()
+
+    def test(self, transform):
+        return CIFAR10CDataset(
+            self.data_root, self.severity, self.corruption, transform
+        )

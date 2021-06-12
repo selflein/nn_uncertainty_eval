@@ -178,7 +178,8 @@ class OODGenomics(torch.utils.data.IterableDataset):
     @staticmethod
     def full_transform(item, transform, target_transform):
         dec = np.array([int(i) for i in item["x"].tobytes().decode("utf-8").split(" ")])
-        x = torch.from_numpy(transform(dec.copy())).float()
+        x = torch.from_numpy(transform(dec.copy()))
+        x = torch.nn.functional.one_hot(x.long(), 4).float()
         y = torch.from_numpy(target_transform(item["y"].copy())).long().squeeze()
         return x, y
 

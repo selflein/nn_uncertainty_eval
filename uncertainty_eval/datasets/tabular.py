@@ -107,7 +107,7 @@ class SensorlessDriveOOD(TabularDatasetSplit):
             "48",
         )
         super().__init__(
-            *data_split(features, labels, splits=[0.0, 0.0, 1.0], seed=split_seed)
+            *data_split(features, labels, splits=[0.0, 0.2, 0.8], seed=split_seed)
         )
 
 
@@ -132,4 +132,4 @@ class SegmentOOD(TabularDatasetSplit):
             [str(i) for i in range(18)],
             "18",
         )
-        super().__init__(*data_split(features, labels, splits=[0.0, 0.0, 1.0]))
+        super().__init__(*data_split(features, labels, splits=[0.0, 0.2, 0.8]))

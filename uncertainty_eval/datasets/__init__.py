@@ -49,6 +49,9 @@ def get_dataset(dataset):
                 ds = partialclass(GenomicsEmbeddingsDataset, dataset_name=dataset)
             else:
                 ds = partialclass(ImageEmbeddingDataset, dataset_name=dataset)
+        elif "CIFAR10-C" in dataset:
+            severity = int(dataset[-1])
+            ds = partialclass(CIFAR10C, severity=severity)
         else:
             raise ValueError(f"Dataset {dataset} not implemented.") from e
     return ds
