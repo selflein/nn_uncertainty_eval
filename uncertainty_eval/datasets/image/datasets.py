@@ -129,7 +129,10 @@ class SVHN(DatasetSplit):
         self.data_root = data_root
 
     def train(self, transform):
-        raise NotImplementedError
+        test_data = dset.SVHN(
+            str(self.data_root / "svhn"), "train", transform=transform, download=True
+        )
+        return test_data
 
     def val(self, transform):
         raise NotImplementedError
