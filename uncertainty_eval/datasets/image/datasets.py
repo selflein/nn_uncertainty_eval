@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from PIL import Image
 from torch.utils.data.dataset import ConcatDataset
 from torchvision import datasets as dset
 from torch.utils.data import random_split, Dataset
@@ -205,7 +206,7 @@ class CIFAR10CDataset(Dataset):
         self.data_root = data_root / "CIFAR-10-C"
         self.data = []
         self.severity = severity
-        self.transform = None
+        self.transform = transform
 
         if corruption == "all":
             for corr_file in self.data_root.iterdir():
@@ -231,11 +232,11 @@ class CIFAR10CDataset(Dataset):
         data_idx = idx // self.TEST_SIZE
         subset_idx = idx % self.TEST_SIZE
 
-        img = torch.from_numpy(self.data[data_idx][subset_idx])
+        img = Image.fromarray(self.data[data_idx][subset_idx])
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, torch.from_numpy(self.labels[subset_idx])
+        return img, self.labels[subset_idx]
 
 
 class CIFAR10C(DatasetSplit):
