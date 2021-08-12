@@ -16,6 +16,7 @@ DATASETS = {
     "gaussian_noise": GaussianNoise,
     "uniform_noise": UniformNoise,
     "Gaussian2D": Gaussian2D,
+    "Gaussian2DOverlap": Gaussian2DOverlap,
     "AnomalousGaussian2D": AnomalousGaussian2D,
     "TwoMoons": TwoMoons,
     "SwissRoll": SwissRoll,

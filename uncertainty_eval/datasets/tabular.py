@@ -73,6 +73,16 @@ class Gaussian2D(TabularDatasetSplit):
         super().__init__(*data_split(features, labels, splits=splits, seed=split_seed))
 
 
+class Gaussian2DOverlap(TabularDatasetSplit):
+    data_shape = (2,)
+
+    def __init__(self, data_root, splits=[0.8, 0.1, 0.1], split_seed=1, **kwargs):
+        features, labels = csv_to_dataset(
+            Path(data_root) / "2DGaussians-1.0.csv", ["0", "1"], "2"
+        )
+        super().__init__(*data_split(features, labels, splits=splits, seed=split_seed))
+
+
 class AnomalousGaussian2D(TabularDatasetSplit):
     data_shape = (2,)
 
